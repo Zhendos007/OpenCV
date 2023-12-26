@@ -1,0 +1,42 @@
+import cv2
+import numpy as np
+from PIL import Image
+
+
+def TrackPoint(frame, templateImage, sensitivity):
+    grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    grayImage = cv2.cvtColor(tracki, cv2.COLOR_BGR2GRAY)
+    res = cv2.matchTemplate(grayFrame, grayImage, cv2.TM_CCOEFF_NORMED)
+    threshold = sensitivity
+    locate = np.where(res >= threshold)
+    return locate
+
+def Center(frame, x, y, img):
+    FlyCenter = Image.fromarray(frame)
+    FlyCenter.paste(img, box=(int(x) - 32, int(y) - 32), mask=img)
+    frame = np.array(FlyCenter)
+    return frame
+
+cap = cv2.VideoCapture(0)
+track = "point.jpg"
+fly = Image.open('fly64.png').convert('RGBA')
+tracki = cv2.imread(track)
+heightPoint, widthPoint, channels = tracki.shape
+
+while True:
+    ret, frame = cap.read()
+    loc = TrackPoint(frame, tracki, 0.6)
+    if len(loc[0]) > 0:
+        x = loc[1][0]
+        y = loc[0][0]
+        cv2.rectangle(frame, (x, y), (x + widthPoint, y + heightPoint), (255, 0, 0), 2)
+
+        cx = x + widthPoint / 2
+        cy = y + heightPoint / 2
+        frame = Center(frame, cx, cy, fly)
+    cv2.imshow('Tracking', frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
